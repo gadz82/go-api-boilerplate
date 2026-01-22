@@ -1,7 +1,6 @@
 .env
 *.db
 vendor
-docs
 .cache
 .idea
 coverage.out

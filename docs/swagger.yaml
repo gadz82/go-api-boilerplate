@@ -1,0 +1,472 @@
+basePath: /api
+definitions:
+  items.JSONAPIItem:
+    properties:
+      data:
+        $ref: '#/definitions/items.JSONAPIItemData'
+    type: object
+  items.JSONAPIItemAttributes:
+    properties:
+      description:
+        example: Item Description
+        type: string
+      title:
+        example: Item Title
+        type: string
+    type: object
+  items.JSONAPIItemData:
+    properties:
+      attributes:
+        $ref: '#/definitions/items.JSONAPIItemAttributes'
+      id:
+        example: item_1
+        type: string
+      relationships:
+        $ref: '#/definitions/items.JSONAPIItemRelationships'
+      type:
+        example: items
+        type: string
+    type: object
+  items.JSONAPIItemListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/items.JSONAPIItemData'
+        type: array
+    type: object
+  items.JSONAPIItemPropertiesRel:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/items.JSONAPIItemPropertyDataIdentifier'
+        type: array
+    type: object
+  items.JSONAPIItemProperty:
+    properties:
+      data:
+        $ref: '#/definitions/items.JSONAPIItemPropertyData'
+    type: object
+  items.JSONAPIItemPropertyAttributes:
+    properties:
+      item_id:
+        example: item_1
+        type: string
+      name:
+        example: Property Name
+        type: string
+      value:
+        example: Property Value
+        type: string
+    type: object
+  items.JSONAPIItemPropertyData:
+    properties:
+      attributes:
+        $ref: '#/definitions/items.JSONAPIItemPropertyAttributes'
+      id:
+        example: prop_1
+        type: string
+      type:
+        example: item_properties
+        type: string
+    type: object
+  items.JSONAPIItemPropertyDataIdentifier:
+    properties:
+      id:
+        example: prop_1
+        type: string
+      type:
+        example: item_properties
+        type: string
+    type: object
+  items.JSONAPIItemPropertyListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/items.JSONAPIItemPropertyData'
+        type: array
+    type: object
+  items.JSONAPIItemPropertyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/items.JSONAPIItemPropertyData'
+    type: object
+  items.JSONAPIItemRelationships:
+    properties:
+      item_properties:
+        $ref: '#/definitions/items.JSONAPIItemPropertiesRel'
+    type: object
+  items.JSONAPIItemResponse:
+    properties:
+      data:
+        $ref: '#/definitions/items.JSONAPIItemData'
+      included:
+        items:
+          $ref: '#/definitions/items.JSONAPIItemProperty'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Go API Boilerplate
+  version: "1.0"
+paths:
+  /v1/items:
+    get:
+      consumes:
+      - application/json
+      description: get items
+      parameters:
+      - description: Include related resources (e.g. item_properties)
+        in: query
+        name: include
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Items
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List items
+      tags:
+      - items
+    post:
+      consumes:
+      - application/json
+      description: Create a new item (ID is auto-generated)
+      parameters:
+      - description: Item data
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/items.JSONAPIItem'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created Item
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create an item
+      tags:
+      - items
+  /v1/items/{id}:
+    delete:
+      description: Delete an item by ID
+      parameters:
+      - description: Item ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an item
+      tags:
+      - items
+    get:
+      consumes:
+      - application/json
+      description: get item by ID
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Include related resources (e.g. item_properties)
+        in: query
+        name: include
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Show an item
+      tags:
+      - items
+    put:
+      consumes:
+      - application/json
+      description: Update an item by ID (ID in request body is ignored, path parameter
+        is used)
+      parameters:
+      - description: Item ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Item data
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/items.JSONAPIItem'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated Item
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an item
+      tags:
+      - items
+  /v1/items/{id}/properties:
+    get:
+      consumes:
+      - application/json
+      description: get item properties for a specific item
+      parameters:
+      - description: Item ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item Properties
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemPropertyListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List item properties
+      tags:
+      - item_properties
+    post:
+      consumes:
+      - application/json
+      description: Create a new item property for a specific item (ID is auto-generated)
+      parameters:
+      - description: Item ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Property data
+        in: body
+        name: property
+        required: true
+        schema:
+          $ref: '#/definitions/items.JSONAPIItemProperty'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created Item Property
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemPropertyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create an item property
+      tags:
+      - item_properties
+  /v1/items/{id}/properties/{property_id}:
+    delete:
+      description: Delete an item property by ID for a specific item
+      parameters:
+      - description: Item ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Property ID (UUID format)
+        in: path
+        name: property_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an item property
+      tags:
+      - item_properties
+    get:
+      consumes:
+      - application/json
+      description: get item property by ID for a specific item
+      parameters:
+      - description: Item ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Property ID (UUID format)
+        in: path
+        name: property_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item Property
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemPropertyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Show an item property
+      tags:
+      - item_properties
+    put:
+      consumes:
+      - application/json
+      description: Update an item property by ID for a specific item (ID in request
+        body is ignored, path parameter is used)
+      parameters:
+      - description: Item ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Property ID (UUID format)
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Property data
+        in: body
+        name: property
+        required: true
+        schema:
+          $ref: '#/definitions/items.JSONAPIItemProperty'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated Item Property
+          schema:
+            $ref: '#/definitions/items.JSONAPIItemPropertyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an item property
+      tags:
+      - item_properties
+swagger: "2.0"
