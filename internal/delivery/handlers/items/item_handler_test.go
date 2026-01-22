@@ -285,3 +285,268 @@ func TestItemHandler_Delete_InvalidUUID(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestItemHandler_Update(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+	item := &domain.Item{ID: testUUID, Title: "Updated Item"}
+	svc.On("UpdateItem", mock.Anything, mock.MatchedBy(func(i *domain.Item) bool {
+		return i.ID == testUUID && i.Title == "Updated Item"
+	})).Return(nil)
+
+	var buf bytes.Buffer
+	err := jsonapi.MarshalPayload(&buf, item)
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: testUUID}}
+	c.Request, _ = http.NewRequest(http.MethodPut, "/items/"+testUUID, &buf)
+
+	handler.Update(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_Update_InvalidUUID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: "invalid-uuid"}}
+	c.Request, _ = http.NewRequest(http.MethodPut, "/items/invalid-uuid", nil)
+
+	handler.Update(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestItemHandler_Update_InvalidBody(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: testUUID}}
+	c.Request, _ = http.NewRequest(http.MethodPut, "/items/"+testUUID, bytes.NewBufferString("invalid json"))
+
+	handler.Update(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestItemHandler_Update_ValidationError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+	// Item without required title
+	item := &domain.Item{ID: testUUID, Title: ""}
+
+	var buf bytes.Buffer
+	err := jsonapi.MarshalPayload(&buf, item)
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: testUUID}}
+	c.Request, _ = http.NewRequest(http.MethodPut, "/items/"+testUUID, &buf)
+
+	handler.Update(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestItemHandler_Update_ServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+	item := &domain.Item{ID: testUUID, Title: "Updated Item"}
+	svc.On("UpdateItem", mock.Anything, mock.Anything).Return(errors.New("service error"))
+
+	var buf bytes.Buffer
+	err := jsonapi.MarshalPayload(&buf, item)
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: testUUID}}
+	c.Request, _ = http.NewRequest(http.MethodPut, "/items/"+testUUID, &buf)
+
+	handler.Update(c)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_Patch(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+	item := &domain.Item{ID: testUUID, Title: "Patched Item"}
+	svc.On("UpdateItem", mock.Anything, mock.MatchedBy(func(i *domain.Item) bool {
+		return i.ID == testUUID && i.Title == "Patched Item"
+	})).Return(nil)
+
+	var buf bytes.Buffer
+	err := jsonapi.MarshalPayload(&buf, item)
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: testUUID}}
+	c.Request, _ = http.NewRequest(http.MethodPatch, "/items/"+testUUID, &buf)
+
+	handler.Patch(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_Delete_ServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+	svc.On("DeleteItem", mock.Anything, testUUID).Return(errors.New("service error"))
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: testUUID}}
+	c.Request, _ = http.NewRequest(http.MethodDelete, "/items/"+testUUID, nil)
+
+	handler.Delete(c)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_GetAll_ServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	svc.On("GetAllItems", mock.Anything).Return([]*domain.Item{}, errors.New("service error"))
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest(http.MethodGet, "/items", nil)
+
+	handler.GetAll(c)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_GetAll_WithIncludeProperties(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	expectedItems := []*domain.Item{{ID: "1", Title: "Test"}}
+	svc.On("GetAllItems", mock.Anything).Return(expectedItems, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest(http.MethodGet, "/items?include=item_properties", nil)
+
+	handler.GetAll(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_GetByID_WithIncludeProperties(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+	item := &domain.Item{ID: testUUID, Title: "Test"}
+	svc.On("GetItemByID", mock.Anything, testUUID).Return(item, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{{Key: "id", Value: testUUID}}
+	c.Request, _ = http.NewRequest(http.MethodGet, "/items/"+testUUID+"?include=item_properties", nil)
+
+	handler.GetByID(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_Create_ServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	item := &domain.Item{Title: "New Item"}
+	svc.On("CreateItem", mock.Anything, mock.Anything).Return(errors.New("service error"))
+
+	var buf bytes.Buffer
+	err := jsonapi.MarshalPayload(&buf, item)
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest(http.MethodPost, "/items", &buf)
+
+	handler.Create(c)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestItemHandler_Create_InvalidBody(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(MockItemService)
+	validator := newTestValidator()
+	logger := newTestLogger()
+	handler := NewItemHandler(svc, validator, logger)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest(http.MethodPost, "/items", bytes.NewBufferString("invalid json"))
+
+	handler.Create(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}

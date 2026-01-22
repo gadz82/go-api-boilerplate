@@ -4,3 +4,4 @@ vendor
 docs
 .cache
 .idea
+coverage.out
