@@ -1,6 +1,7 @@
 .env
-./server
+server
 ./*.db
 vendor
 docs
 .cache
+.idea
