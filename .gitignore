@@ -1,0 +1,6 @@
+.env
+./server
+./*.db
+vendor
+docs
+.cache
